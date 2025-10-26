@@ -1,0 +1,53 @@
+// ===== CREATE CONSTRAINTS =====
+CREATE CONSTRAINT students_id_unique  IF NOT EXISTS
+FOR (s:Students) REQUIRE s.StudentID IS UNIQUE;
+
+CREATE CONSTRAINT courses_id_unique  IF NOT EXISTS
+FOR (c:Courses) REQUIRE c.CourseID IS UNIQUE;
+
+// ===== CREATE NODES =====
+CREATE (:Students {StudentID:'S04', Name:'Meena'});
+CREATE (:Students {StudentID:'S05', Name:'Suresh'});
+CREATE (:Students {StudentID:'S06', Name:'Divya'});
+
+CREATE (:Courses {CourseID:'C04', Title:'Operating Systems'});
+CREATE (:Courses {CourseID:'C05', Title:'Database Security'});
+CREATE (:Courses {CourseID:'C06', Title:'Web Technologies'});
+
+// ===== CREATE RELATIONSHIPS =====
+MATCH (s1:Students {StudentID:'S04'}), (c1:Courses {CourseID:'C04'})
+CREATE (s1)-[:ENROLLED_IN]->(c1);
+
+MATCH (s2:Students {StudentID:'S05'}), (c2:Courses {CourseID:'C05'})
+CREATE (s2)-[:ENROLLED_IN]->(c2);
+
+MATCH (s3:Students {StudentID:'S06'}), (c3:Courses {CourseID:'C06'})
+CREATE (s3)-[:ENROLLED_IN]->(c3);
+
+// ===== READ QUERIES =====
+MATCH (s:Students) RETURN s;                            
+MATCH (s:Students)-[:ENROLLED_IN]->(c:Courses) RETURN s,c;   
+MATCH (s:Students)-[:ENROLLED_IN]->(c:Courses {Title:'Operating Systems'}) RETURN s; 
+MATCH (s:Students {Name:'Suresh'})-[:ENROLLED_IN]->(c:Courses) RETURN c; 
+MATCH (s:Students)-[:ENROLLED_IN]->(c:Courses)
+RETURN s.Name AS Student, collect(c.Title) AS Courses;   
+
+// ===== UPDATE OPERATIONS =====
+MATCH (s:Students {Name:'Divya'})
+SET s.Name = 'Divya Reddy'
+RETURN s;
+
+MATCH (s:Students {StudentID:'S05'})-[r:ENROLLED_IN]->(c:Courses {CourseID:'C05'})
+SET r.Grade = 'A'
+RETURN s,r,c;
+
+// ===== DELETE OPERATIONS =====
+MATCH (s:Students {StudentID:'S04'})-[r:ENROLLED_IN]->(c:Courses {CourseID:'C04'})
+DELETE r;                                                 
+
+MATCH (s:Students {StudentID:'S04'})
+DETACH DELETE s;                                          
+
+// ===== CHECK FINAL GRAPH =====
+MATCH (s:Students)-[r:ENROLLED_IN]->(c:Courses)
+RETURN s.Name, c.Title, r.Grade;
